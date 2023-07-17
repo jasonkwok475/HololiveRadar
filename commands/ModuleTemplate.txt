@@ -1,0 +1,24 @@
+const { SlashCommandBuilder } = require('discord.js');
+const fetch = require("node-fetch");
+const config = require("../config/config.json");
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, '../.env') });
+const database = require("../functions/database.js");
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('song')
+    .setDescription('Gets information about a hololive song. A random song will be picked if no information is given.')
+    .addStringOption(option =>
+      option.setName('member')
+        .setDescription('Get all the songs uploaded by member')
+        .setAutocomplete(true)
+        .setRequired(true)),
+    //.setDefaultMemberPermissions(0),
+  async autocomplete(interaction) {
+
+  },
+  async execute(interaction) {
+
+  }
+}
