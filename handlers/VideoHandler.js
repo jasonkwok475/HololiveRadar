@@ -8,6 +8,9 @@ const categories = require("../config/categories.json");
 const config = require("../config/config.json");
 const ytFormat = require("youtube-duration-format");
 
+
+//!TEMP
+const fs = require("fs");
 /**
  * @class
  * @classdesc Module to handle all video events and notifications
@@ -32,7 +35,7 @@ class VideoHandler extends EventEmitter {
     this._setWeeklySongUpdate();
 
     this.timers.checkMusic = setInterval(() => this._checkNewMusic(), 1000 * 60 * 5); //Check for unsent music notifications
-    this.timers.checkTopic = setInterval(() => this._checkNewTopic(), 1000 * 60 * 5);
+    this.timers.checkTopic = setInterval(() => this._checkNewTopic(), 1000 * 60 * 5); //Check for unsent topic music
     this.timers.checkUnclassified = setInterval(() => this._checkUnclassified(), 1000 * 60 * 5); //Check for unsent unclassified videos
     this.timers.checkScheduled = setInterval(() => this._checkScheduled(), 1000 * 60 * 5); //Check unsent scheduled videos
     this.timers.checkLivestreams = setInterval(() => this._checkLivestreams(), 1000 * 60 * 5); //Check unsent livestream alerts
@@ -155,7 +158,7 @@ class VideoHandler extends EventEmitter {
   }
 
   async _checkStillLive() {
-    let sql, that = this, client = this.client;
+    let sql, self = this, client = this.client;
     try {
       sql = await database.query("SELECT * FROM \`livestreams\` WHERE \`status\`='1'");
     } catch (e) { client.log.error(e); }
@@ -172,7 +175,7 @@ class VideoHandler extends EventEmitter {
       try {
         let { status, data } = await youtube.getVideos({ id }), array = id.split(",");
         for (let id of array) {
-          that.updateLiveMessage(id, sql.filter(x => x.video_id == id)[0], data.filter(x => x.id == id)[0]);
+          self.updateLiveMessage(id, sql.filter(x => x.video_id == id)[0], data.filter(x => x.id == id)[0]);
         }
       } catch (e) { client.log.error(e); }
     }
@@ -226,7 +229,7 @@ class VideoHandler extends EventEmitter {
   async _deleteLivestreamData(id, type) {
     //!Consider DMing members if the stream hasn't gone live and is privated
     let sql = (await database.query(`SELECT * FROM \`livestreams\` WHERE \`video_id\`='${id}'`)).results[0];
-    if (sql.message_id) {
+    if (sql?.message_id) {
       await this.client.channels.cache.get(config.current_live).messages.fetch(sql.message_id).then(msg => msg.delete()).catch(e => { });
       await this.client.channels.cache.get(config.upcoming_live).messages.fetch(sql.message_id).then(msg => msg.delete()).catch(e => { });
     }
@@ -392,9 +395,14 @@ class VideoHandler extends EventEmitter {
     let channel = await database.getMember(sql.channel).catch(e => client.log.error(e));
     if (!channel) return client.log.info("Channel was not found, Live message was not sent for ID: " + sql.video_id);
 
+    let title = video.snippet.title.replaceAll("''", "\"");
+    title = title.replaceAll(`'`, `\\'`);
+    title = title.replaceAll(`"`, `\\"`);
+    title = title.replaceAll("`", "\\`");
+
     client.channels.cache.get(config.covers_channel).send(`**${channel.name}** is Premiering a New **${sql.type == 1 ? "Original" : "Cover"}** Song!\n<@&${config.music_role}> <@&${channel.role}>\nhttps://www.youtube.com/watch?v=${sql.video_id}`).then(async msg => {
       msg.crosspost();
-      await database.query(`INSERT INTO music (title, video_id, channel, type, sent, plays, previous_views) VALUES ('${video.snippet.title.replace("'", "\\'")}', '${sql.video_id}', '${sql.channel}', '${sql.type}', '1', '0', '0')`);
+      await database.query(`INSERT INTO music (title, video_id, channel, type, sent, plays, previous_views) VALUES ('${title}', '${sql.video_id}', '${sql.channel}', '${sql.type}', '1', '0', '0')`);
       await database.query(`DELETE FROM \`music_scheduled\` WHERE \`video_id\`='${sql.video_id}'`);
       await client.channels.cache.get(config.premieres_channel).messages.fetch(sql.message_id).then(m => m.delete()).catch(e => {});
     });
@@ -422,14 +430,21 @@ class VideoHandler extends EventEmitter {
         await database.query(`UPDATE \`music\` SET \`private\`='1' WHERE \`video_id\`='${row.video_id}'`).catch(e => this.client.log.error(e));
         continue;
       }
-      let title = data.snippet.title.replace("'", "\\'");
+
+      let title = data.snippet.title.replaceAll("''", "\"");
+      title = title.replaceAll(`'`, `\\'`);
+      title = title.replaceAll(`"`, `\\"`);
+      title = title.replaceAll("`", "\\`");
+
       if (string == "") {
         string = `SELECT '${row.video_id}' AS id, ${row.views} AS previous, ${data.statistics.viewCount} as current, '${title}' as videotitle`;
       } else string = string + ` UNION ALL SELECT '${row.video_id}', ${row.views}, ${data.statistics.viewCount}, '${title}'`;
     }
 
     await database.query("SET character_set_results = 'utf8mb4', character_set_client = 'utf8mb4', character_set_connection = 'utf8mb4', character_set_database = 'utf8mb4', character_set_server = 'utf8mb4'");
-    await database.query(`UPDATE music m JOIN (${string}) vals ON m.video_id = vals.id SET previous_views = previous, views = current, title = videotitle`).catch(e => this.client.log.error(e));
+    await database.query(`UPDATE music m JOIN (${string}) vals ON m.video_id = vals.id SET previous_views = previous, views = current, title = videotitle`).catch(e => {      
+      this.client.log.error(e);
+    });
 
     //Update the next weekly songs time and set a timeout
     let nextWeekly = sqlData.next_reset + (1000 * 60 * 60 * 24 * 7);

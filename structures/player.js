@@ -26,7 +26,7 @@ const youtube = require('../functions/youtube.js');
  */
 class player extends Player {
 
-  disabled = false;
+  disabled = true; //!temp
   
   /**
    * Option to show the discord-player debug mesages 

@@ -36,6 +36,10 @@ module.exports = new Event("ready", async (client) => {
   client.videos.init();
   client.playlist.init();
 
+  //!TEMP
+  //client.memberRole();
+  //client.hololiveRole();
+
   //client.sendRules();
 
   //!TEMP

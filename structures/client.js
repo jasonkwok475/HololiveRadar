@@ -639,6 +639,57 @@ class DiscordBot extends Client {
       }]
     });
   }
+
+  memberRole() {
+    return;
+    //1078068018350919863
+    this.channels.cache.get("1078068018350919863").send({
+      embeds: [{
+        color: config.informationEmbedColor,
+        title: "Hololive DEV_IS -ReGLOSS-",
+        description: "<@&1148835635961016400> - Ao Ch. 火威青 ‐ ReGLOSS\n<@&1148839232882872360> - Kanade Ch. 音乃瀬奏 ‐ ReGLOSS\n<@&1148839279867469864> - Ririka Ch. 一条莉々華 ‐ ReGLOSS\n<@&1148839356765835294> - Raden Ch. 儒烏風亭らでん ‐ ReGLOSS\n<@&1148839403402297434> - Hajime Ch. 轟はじめ ‐ ReGLOSS",
+        footer: {
+          text: "Click the button again to remove the role"
+        }
+      }],
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setLabel("Hiodoshi Ao").setCustomId("memberRole-1148835635961016400").setStyle("Secondary"),
+          new ButtonBuilder().setLabel("Otonose Kanade").setCustomId("memberRole-1148839232882872360").setStyle("Secondary"),
+          new ButtonBuilder().setLabel("Ichijou Ririka").setCustomId("memberRole-1148839279867469864").setStyle("Secondary")
+        ),
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setLabel("Juufuutei Raden").setCustomId("memberRole-1148839356765835294").setStyle("Secondary"),
+          new ButtonBuilder().setLabel("Todoroki Hajime").setCustomId("memberRole-1148839403402297434").setStyle("Secondary")
+        )
+      ]
+    });
+  }
+
+  hololiveRole() {
+    return;
+
+    this.channels.cache.get("1078068018350919863").messages.fetch("1078075643918565498").then(msg => {
+      let comp = msg.components;
+      comp[1] = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel("hololive DEV_IS").setCustomId("memberRole-1148839445462782082").setStyle("Secondary")
+      )
+
+      let m = {
+        color: config.informationEmbedColor,
+        title: "Hololive Main Channels",
+        description: `<@&1071909003313020958> - hololive ホロライブ - VTuber Group
+        <@&1071909003539533926> - hololive English
+        <@&1071909004806205501> - hololive Indonesia
+        <@&1148839445462782082> - hololive DEV_IS`,
+        footer: {
+          text: "Click the button again to remove the role"
+        }
+      };
+
+      msg.edit({ embeds: [m], components: comp });
+    });
+  }
 }
 
 module.exports = DiscordBot;

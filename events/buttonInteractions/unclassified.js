@@ -76,7 +76,7 @@ module.exports = new Event("unclassified", async (interaction, params) => {
             insertPremiere("auto", songType, video, unclassified);
           }).catch(e => interaction.reply({ content: e, ephemeral: true }));
         } else {
-          await database.query(`INSERT INTO \`livestreams\` (video_id, channel, premiere, sent, status) VALUES ('${id}', '${unclassified.channel}', '${video.liveStreamingDetails.scheduledStartTime}', '0', '0')`).then(() => {
+          await database.query(`INSERT INTO \`livestreams\` (video_id, channel, premiere, sent, status) VALUES ('${id}', '${unclassified.channel}', '${video.liveStreamingDetails.scheduledStartTime.replace("T", " ").replace("Z", "")}', '0', '0')`).then(() => {
             interaction.reply({ content: `Successfully classified video as an \"Upcoming Livestream\".`, ephemeral: true });
             interaction.message.delete();
 

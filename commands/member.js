@@ -86,9 +86,14 @@ module.exports = {
       //the songs tab is giving the wrong most reent song sometimes because of our insert order
 
     let videoIds = [];
-    videoIds.push(...livestreams, ...premieres, memberSongs[0], mostRecentSong);
+    videoIds.push(...livestreams, ...premieres);
+    if (mostRecentSong) videoIds.push(mostRecentSong);
+    if (memberSongs.length > 0) videoIds.push(memberSongs[0]);
 
-    let { strings } = await interaction.client.sortVideos(videoIds);
+    let strings = [];
+    if (videoIds.length > 0) {
+      strings = (await interaction.client.sortVideos(videoIds)).strings;
+    } 
     let videos = [], premiere = [];
 
     for (let string of strings) {
@@ -174,15 +179,19 @@ module.exports = {
 
 
     //Songs embed message
-    let top = videos.filter(x => x.id == memberSongs[0].video_id)[0];
-    let recent = videos.filter(x => x.id == mostRecentSong.video_id)[0];
-    let allViews = memberSongs.reduce((a, b) => (a.views || a) + b.views);
+    let allViews = memberSongs.length > 0 ? memberSongs.reduce((a, b) => (a.views || a) + b.views) : 0;
     let songFields = [
       { name: "Statistics", value: `Songs: ${memberSongs.length}`, inline: true },
-      { name: "Average Views/Song", value: `${f.subscriberString(Math.round(allViews / memberSongs.length))}`, inline: true },
-      { name: `Most Popular Song - ${f.subscriberString(top.statistics.viewCount)} views`, value: `[${top.snippet.title}](https://www.youtube.com/watch?v=${top.id})`, inline: false },
-      { name: `Most Recent Song - ${f.subscriberString(recent.statistics.viewCount)} views - <t:${Math.round(new Date(recent.snippet.publishedAt.replace("T", " ").replace("Z", "")).getTime() / 1000)}:R>`, value: `[${recent.snippet.title}](https://www.youtube.com/watch?v=${recent.id})`, inline: false },
+      { name: "Average Views/Song", value: `${f.subscriberString(Math.round(allViews / memberSongs.length))}`, inline: true }
     ]
+    if (memberSongs.length > 0) {
+      let top = videos.filter(x => x.id == memberSongs[0].video_id)[0];
+      let recent = videos.filter(x => x.id == mostRecentSong.video_id)[0];
+      songFields.push(
+        { name: `Most Popular Song - ${f.subscriberString(top.statistics.viewCount)} views`, value: `[${top.snippet.title}](https://www.youtube.com/watch?v=${top.id})`, inline: false },
+        { name: `Most Recent Song - ${f.subscriberString(recent.statistics.viewCount)} views - <t:${Math.round(new Date(recent.snippet.publishedAt.replace("T", " ").replace("Z", "")).getTime() / 1000)}:R>`, value: `[${recent.snippet.title}](https://www.youtube.com/watch?v=${recent.id})`, inline: false },
+      );
+    }
 
     if (premieres.length > 0) {
       let video = videos.filter(x => x.id == premieres[0].video_id)[0];
