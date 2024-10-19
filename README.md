@@ -1,6 +1,8 @@
 # Hololive Radar v3.0.0
 
-A script made to handle and alert video events saved through pubsubhubbub. 
+This is a discord.js bot made to provide an interface to users hoping to receive notifications and access tagged YouTube data.
+The bot is connected to an internal MYSQL database updated by a separate PHP script that handles and saves video events from pubsubhubbub.
+
 
 ## Dependencies
 - discord.js v14.11
